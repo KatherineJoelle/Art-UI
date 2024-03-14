@@ -10,8 +10,9 @@ import {
 import { Color4, Quaternion, Vector3 } from '@dcl/sdk/math'
 import { Cube, ArtHover } from './components'
 import { getRandomHexColor } from './utils'
-import { openUI } from './ui'
+import { changeCurrentArtworkId, openUI } from './ui'
 import * as utils from '@dcl-sdk/utils'
+import { getArtworkId } from './artData'
 
 
 /**
@@ -31,13 +32,18 @@ export let hoverVisible = false
  */
 export function changeColorSystem() {
   for (const [entity] of engine.getEntitiesWith(Cube, PointerEvents)) {
-   
+    const artworkId = getArtworkId(entity);
+
     if (inputSystem.isTriggered(InputAction.IA_POINTER, PointerEventType.PET_HOVER_ENTER, entity)) {
-      Material.setPbrMaterial(entity, { albedoColor: Color4.fromHexString(getRandomHexColor()) })
-      hoverVisible = !hoverVisible
-      utils.timers.setTimeout(() => hoverVisible = false, 9000)
+      Material.setPbrMaterial(entity, { albedoColor: Color4.fromHexString(getRandomHexColor()) });
+      if (artworkId !== undefined) {
+        changeCurrentArtworkId(artworkId);
+      }
+      hoverVisible = true;
+      utils.timers.setTimeout(() => hoverVisible = false, 9000);
     } else if (inputSystem.isTriggered(InputAction.IA_POINTER, PointerEventType.PET_HOVER_LEAVE, entity)) {
-      hoverVisible = false
+      hoverVisible = false;
     }
   }
 }
+

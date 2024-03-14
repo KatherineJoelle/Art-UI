@@ -1,5 +1,6 @@
 import {
   engine,
+  Entity,
   Transform,
   UiCanvasInformation,
 } from '@dcl/sdk/ecs'
@@ -9,14 +10,39 @@ import { breakLines, setupUiInfoEngine, tieredFontScale, tieredModalScale, tiere
 import { hoverVisible } from './systems'
 import { Color4 } from '@dcl/sdk/math'
 import { Cube } from './components'
-import { artTitle1, artDescription1 } from './artData'
+import { artworkData, ArtworkData } from './artData'
 
+//let currentArtworkId: number = 1; // Initialize with a default value
 
 
 // Fonts: 'serif', 'sans-serif', 'monospace'
+let currentArtworkId = 1;
 
-const artTitle = artTitle1
-const artDescription = artDescription1
+// Function to find artwork by ID
+function findArtworkById(id: number): ArtworkData | undefined {
+  return artworkData.find(artwork => artwork.artworkId === id);
+}
+
+
+
+// Define your artwork data map
+export const ArtworkIdMap = new Map<Entity, number>();
+
+// Function to set artwork ID for an entity
+export function setArtworkId(entity: Entity, artworkId: number) {
+  ArtworkIdMap.set(entity, artworkId);
+}
+
+// Function to get artwork ID for an entity
+export function getArtworkId(entity: Entity): number | undefined {
+  return ArtworkIdMap.get(entity);
+}
+
+
+
+
+
+
 
 const Max_Chars = 25
 const Min_Chars = 25
@@ -25,8 +51,8 @@ const baseFontSize = 24;
 const titleFont = 'serif'
 const descriptionFont = 'sans-serif'
 const titleColor = Color4.Black()
-const descriptionColor = Color4.Gray()
-
+const descriptionColor = Color4.Black()
+const artFrame = 'images/artFrame.png'
 
 
 export const uiComponent = () => [
@@ -39,27 +65,38 @@ export function setupUi() {
     ReactEcsRenderer.setUiRenderer(uiComponent)
 }
 
+export function changeCurrentArtworkId(newId: number) {
+  const artwork = findArtworkById(newId);
+  if (artwork && artwork.visible) {
+      currentArtworkId = newId;
+  }
+}
 
 
+// index but dont want index
 export function openUI() {
   if (hoverVisible) {
-    const artTitleWrap = wordWrap(artTitle, 20 * tieredModalTextWrapScale, 6) 
-    const artDescriptionWrap = breakLines(artDescription, Max_Chars)
+    const artwork = findArtworkById(currentArtworkId);
+    if (artwork && artwork.visible) {
+        const { title, description } = artwork;
+    const artTitleWrap = wordWrap(title, 20 * tieredModalTextWrapScale, 6) 
+    const artDescriptionWrap = breakLines(description, Max_Chars)
     return (
       <UiEntity
         uiTransform={{
-          height: `${UiCanvasInformation.get(engine.RootEntity).height * .1}`,
+          height: `${UiCanvasInformation.get(engine.RootEntity).height * .15}`,
           width: `${UiCanvasInformation.get(engine.RootEntity).width * .5}`,
           positionType: 'absolute',
-          position: `27% 0 0 ${UiCanvasInformation.get(engine.RootEntity).width / 100}`,
+          position: `23% 0 0 ${UiCanvasInformation.get(engine.RootEntity).width / 100}`,
           flexDirection: 'column',
           alignItems: 'center',
           maxHeight: '15%',
-          maxWidth: '20%',
+          maxWidth: '17.5%',
+          minWidth: '17.5%'
 
         }}
         uiBackground={{
-          //texture: { src: rewardUI }, 
+          texture: { src: artFrame }, 
           textureMode: "stretch", uvs: [1, 1, 1, 1]
         }}
 
@@ -74,25 +111,25 @@ export function openUI() {
             width: 'auto',
             height: 'auto',
             alignSelf: 'stretch',
-            margin: '20px 0px 0px 0px',
+            margin: `20px 0px 0px ${UiCanvasInformation.get(engine.RootEntity).width * .025}`,
             positionType: 'absolute',
-            position: '-80% 0 0 0%',
+            position: '-30% 0 0 0%',
           }}
           color={titleColor}
         />
         {/* Label displaying Art Details */}
         <Label
           value={artDescriptionWrap}
-          fontSize={20 * tieredFontScale}
+          fontSize={15 * tieredFontScale}
           font={descriptionFont}
-          textAlign="top-left"
+          textAlign="middle-left"
           uiTransform={{
             width: 'auto',
             height: 'auto',
             alignSelf: 'stretch',
-            margin: '10px 0px 0px 0px',
+            margin: `10px 0px 0px ${UiCanvasInformation.get(engine.RootEntity).width * .025}`,
             positionType: 'absolute',
-            position: '20% 0 0 0%',
+            position: '15% 0 0 0%',
           }}
           color={descriptionColor}
         />
@@ -101,7 +138,7 @@ export function openUI() {
 
     );
 
-  }
+  }}
 
 }
 
